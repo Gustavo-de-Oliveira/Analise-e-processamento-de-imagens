@@ -1,14 +1,20 @@
-# opencv
+#coding=utf-8
+
 import cv2
 import numpy as np
 
+#sigma - Padrão do envelope gaussiano (Altera a quantidade de elipses procuradas) = 10
+#teta - Orientação (inclinação em graus) = 0
+#lambda - Comprimento de onda (pensando em 2d, altera a variação x0 e x) = 30
+#psi - Deslocamento da função senoide (Desloca a/as elipse/elipses) = 0
+#gama - Proporção espacial e elipticidade da função(pensando em 2d, altera a elipse que procuramos, em tamanho y0 e y) = 0.25
 def gabor(sigma, theta, Lambda, psi, gamma):
     """Gabor feature extraction."""
     sigma_x = sigma
     sigma_y = float(sigma) / gamma
 
     # Bounding box
-    nstds = 3  # Number of standard deviation sigma
+    nstds = 1  # Number of standard deviation sigma
     xmax = max(abs(nstds * sigma_x * np.cos(theta)), abs(nstds * sigma_y * np.sin(theta)))
     xmax = np.ceil(max(1, xmax))
     ymax = max(abs(nstds * sigma_x * np.sin(theta)), abs(nstds * sigma_y * np.cos(theta)))
@@ -24,38 +30,37 @@ def gabor(sigma, theta, Lambda, psi, gamma):
     gb = np.exp(-.5 * (x_theta ** 2 / sigma_x ** 2 + y_theta ** 2 / sigma_y ** 2)) * np.cos(2 * np.pi / Lambda * x_theta + psi)
     return gb
 
-def build_filters():
-    """ returns a list of kernels in several orientations
-    """
-    filters = []
-    ksize = 31
-    for theta in np.arange(0, np.pi, np.pi / 32):
-        #filtro = gabor(1, 0, 6.5, -1.5, 0.3)
-        params = {'sigma':1.0, 'theta':theta, 'Lambda':10,
-                  'psi':2, 'gamma':0.5}
-        kern = gabor(**params)
-        kern /= 1.5*kern.sum()
-        filters.append((kern,params))
-    return filters
+def criarBancoDeFiltros():
+    filtros = []
 
-def process(img, filters):
-    """ returns the img filtered by the filter list
-    """
-    accum = np.zeros_like(img)
-    for kern,params in filters:
-        fimg = cv2.filter2D(img, cv2.CV_8UC3, kern)
-        np.maximum(accum, fimg, accum)
-    return accum
+    for theta in np.arange(0, np.pi, np.pi/18):
+        parametros = {'sigma':1.0, 'theta':theta, 'Lambda':10,
+                  'psi':2, 'gamma':0.5}
+        kern = gabor(**parametros)
+        kern /= 1.5 * kern.sum()
+        filtros.append((kern, parametros))
+
+    return filtros
+
+def processarImagem(img, filtros):
+    imgFinal = np.zeros_like(img)
+
+    for kern, parametros in filtros:
+        imgFiltrada = cv2.filter2D(img, cv2.CV_8UC3, kern)
+        np.maximum(imgFinal, imgFiltrada, imgFinal)
+
+    return imgFinal
+
 
 #main
-filters = build_filters()
+filtros = criarBancoDeFiltros()
 
 img = cv2.imread('img2-normalizada.jpg')
 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-cv2.imshow('image', img)
+cv2.imshow('imagem', img)
 
-filtered_img = process(img, filters)
+imagemFiltrada = processarImagem(img, filtros)
 
-cv2.imshow('filtered image', filtered_img)
+cv2.imshow('imagem filtrada', imagemFiltrada)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
