@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 
 #sigma - Padrão do envelope gaussiano (Altera a quantidade de elipses procuradas) = 10
-#theta - Orientação (inclinação em graus) = 0
+#teta - Orientação (inclinação em graus) = 0
 #lambda - Comprimento de onda (pensando em 2d, altera a variação x0 e x) = 30
 #psi - Deslocamento da função senoide (Desloca a/as elipse/elipses) = 0
 #gama - Proporção espacial e elipticidade da função(pensando em 2d, altera a elipse que procuramos, em tamanho y0 e y) = 0.25
@@ -27,16 +27,16 @@ def gabor(sigma, theta, Lambda, psi, gamma):
     x_theta = x * np.cos(theta) + y * np.sin(theta)
     y_theta = -x * np.sin(theta) + y * np.cos(theta)
 
-    gb = np.exp(-.5 * (x_theta ** 2 / sigma_x ** 2 + y_theta ** 2 / sigma_y ** 2)) * np.cos(2 * np.pi / Lambda * x_theta + psi)
+    gb = np.exp(-.5 * (x_theta ** 2 / sigma_x ** 2 + y_theta ** 2 / sigma_y ** 2)) * -np.cos(2 * np.pi / Lambda * x_theta + psi)
     
     return gb
 
 def criarBancoDeFiltros():
     filtros = []
 
-    for theta in np.arange(0, np.pi, np.pi/10):
-        parametros = {'sigma':1, 'theta':theta, 'Lambda':5,
-                  'psi':0, 'gamma':0.2}
+    for theta in np.arange(0, np.pi, np.pi/18):
+        parametros = {'sigma':1.0, 'theta':theta, 'Lambda':4.5,
+                  'psi':0, 'gamma':0.25}
         kern = gabor(**parametros)
         kern /= 1 * kern.sum()
         filtros.append((kern, parametros))
@@ -56,12 +56,13 @@ def processarImagem(img, filtros):
 #main
 filtros = criarBancoDeFiltros()
 
-img = cv2.imread('digital-normalizada.jpg')
+img = cv2.imread('img2-normalizada.jpg')
 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 cv2.imshow('imagem', img)
 
 imagemFiltrada = processarImagem(img, filtros)
 
 cv2.imshow('imagem filtrada', imagemFiltrada)
+cv2.imwrite("img2-filtrada.jpg", imagemFiltrada)
 cv2.waitKey(0)
 cv2.destroyAllWindows()

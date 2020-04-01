@@ -6,12 +6,12 @@ def build_filters():
     """ returns a list of kernels in several orientations
     """
     filters = []
-    ksize = 31
+    ksize = 21
     for theta in np.arange(0, np.pi, np.pi / 32):
-        params = {'ksize':(ksize, ksize), 'sigma':1.0, 'theta':theta, 'lambd':15.0,
-                  'gamma':0.02, 'psi':0, 'ktype':cv2.CV_32F}
+        params = {'ksize':(ksize, ksize), 'sigma':1.0, 'theta':theta, 'lambd':4.5,
+                  'psi':0, 'gamma':0.25 , 'ktype':cv2.CV_32F}
         kern = cv2.getGaborKernel(**params)
-        kern /= 1.5*kern.sum()
+        kern /= 1 *kern.sum()
         filters.append((kern,params))
     return filters
 
@@ -27,7 +27,7 @@ def process(img, filters):
 #main
 filters = build_filters()
 
-img = cv2.imread('img2-normalizada.jpg')
+img = cv2.imread('img3-normalizada.jpg')
 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 cv2.imshow('image', img)
 
